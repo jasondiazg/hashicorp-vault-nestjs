@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+    name: {{ .Values.deployment.name }}
+  name: {{ .Values.deployment.name }}

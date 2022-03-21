@@ -1,0 +1,185 @@
+## Docker image parameters
+##
+container:
+  ## Container's image definition
+  ##
+  image:
+    ## Container's image registry
+    ##
+    registry: jasondiazg
+    ## Container's image repository name
+    ##
+    repository: hashicorp-vault-nestjs
+    ## Container's image tag
+    ##
+    tag: latest
+    ## Specify a imagePullPolicy
+    ##
+    pullPolicy: Always
+    ## Optionally specify the imagePullSecret.
+    ##
+    pullSecrets: deployment-docker-registry-secret
+  ## Resources assigned to the container
+  ##
+  resources:
+    ## Limit resources
+    ##  
+    limits:
+      memory: 128Mi
+      cpu: 100m
+    ## Requested resources
+    ##  
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+  ## Additional environment variables to be set  
+  ## ConfigMaps (configMapKeyRef) and Secrets (secretKeyRef) referencies may be used here
+  ##  
+  additionalVariables:
+    - name: NODE_ENV
+      value: production
+    - name: MONGO_CREDS_DYNAMIC_FILENAME
+      value: /vault/secrets/mongodb.json
+    - name: MONGO_CREDS_STATIC_FILENAME
+      value: /vault/secrets/mongodb-static.json
+
+## Deployment Parameters
+##
+deployment:
+  ## Deployment name
+  ##
+  name: hashicorp-vault-nestjs
+  ## Number of replicas to deploy initially
+  ##
+  replicas: 3
+  ## Minumum number of available replicas for the pod disruption budget
+  ##
+  minAvailable: 1
+  
+  ## Port to access the service
+  ##
+  servicePort:
+    ## Port number
+    ##
+    number: 3000
+    ## Port name
+    ##
+    name: http
+  
+  ## Port exposed by the container
+  ##
+  containerPort: 
+    ## Port number
+    ##
+    number: 3000
+    ## Port Protocol
+    ##
+    protocol: TCP
+  
+  ## Configuraton for the readiness probe
+  ##
+  readinessProbe:
+    ## URL with the endpoint to test id the service is ready
+    ##
+    endpoint: /api/health
+    ## Success Threshold
+    ##
+    successThreshold: 1
+    ## Failure Threshold
+    ##
+    failureThreshold: 120
+    ## Period in Seconds
+    ##
+    periodSeconds: 5
+    ## Initial delay to start readiness probe in seconds
+    ##
+    initialDelaySeconds: 10
+
+  ## Configuraton for the liveness probe
+  ##
+  livenessProbe:
+    ## URL with the endpoint to test id the service is ready
+    ##
+    endpoint: /api/health
+    ## Success Threshold
+    ##
+    successThreshold: 1
+    ## Failure Threshold
+    ##
+    failureThreshold: 2
+    ## Period in Seconds
+    ##
+    periodSeconds: 30
+    ## Initial delay to start liveness probe in seconds
+    ##
+    initialDelaySeconds: 60
+
+  ## Affinity for pod assignment.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - hashicorp-vault-nestjs
+        topologyKey: "kubernetes.io/hostname"
+
+  # Extra annotations to attach to the application deployment/pods
+  # This can either be YAML or a YAML-formatted multi-line templated string map
+  # of the annotations to apply to the deployment/pods
+  annotations:
+    vault.hashicorp.com/agent-inject: 'true'
+    vault.hashicorp.com/role: 'hashicorp-vault-nestjs'
+    vault.hashicorp.com/agent-revoke-on-shutdown: 'true'
+    vault.hashicorp.com/agent-inject-secret-mongodb.json: 'database/creds/mongodb-role'
+    vault.hashicorp.com/agent-inject-template-mongodb.json: |
+      {{- with secret "database/creds/mongodb-role" -}}
+      {
+        "username": "{{ .Data.username }}",
+        "password": "{{ .Data.password }}"
+      }
+      {{- end }}
+    vault.hashicorp.com/agent-inject-secret-mongodb-static.json: 'internal/data/database/config'
+    vault.hashicorp.com/agent-inject-template-mongodb-static.json: |
+      {{- with secret "internal/data/database/config" -}}
+      {
+        "username": "{{ .Data.data.username }}",
+        "password": "{{ .Data.data.password }}"
+      }
+      {{- end }}
+
+## Role and Role Binding Parameters
+##
+role:
+  pod:
+    ## API Groups to apply to the App Pod Role
+    ##
+    apiGroups: [""]
+    ## Resources to apply to the App Pod Role
+    ##
+    resources:
+      - "pods"
+    ## Verbs to apply to the App Pod Role
+    ##
+    verbs:
+      - "delete"
+  deployment:
+    ## API Groups to apply to the App Deployment Role
+    ##
+    apiGroups: 
+      - "extensions"
+      - "apps"
+    ## Resources to apply to the App Deployment Role
+    ##
+    resources:
+      - "deployments"
+    ## Verbs to apply to the App Deployment Role
+    ##
+    verbs:
+      - "list"
+      - "get"

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+  name: {{ .Values.deployment.name }}
+spec:
+  ports:
+    - name: {{ .Values.deployment.servicePort.name }}
+      port: {{ .Values.deployment.servicePort.number }}
+      targetPort: {{ .Values.deployment.containerPort.number }}
+      protocol: {{ .Values.deployment.containerPort.protocol }}
+  selector:
+    app: {{ .Values.deployment.name }}

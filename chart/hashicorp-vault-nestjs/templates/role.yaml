@@ -1,0 +1,33 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+    name: {{ .Values.deployment.name }}-pod
+  name: {{ .Values.deployment.name }}-pod
+rules:
+- apiGroups: 
+    {{- toYaml .Values.role.pod.apiGroups | nindent 4 }}
+  resources:
+    {{- toYaml .Values.role.pod.resources | nindent 4 }}
+  verbs:
+    {{- toYaml .Values.role.pod.verbs | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+    name: {{ .Values.deployment.name }}-deployment
+  name: {{ .Values.deployment.name }}-deployment
+rules:
+- apiGroups: 
+    {{- toYaml .Values.role.deployment.apiGroups | nindent 4 }}
+  resources:
+    {{- toYaml .Values.role.deployment.resources | nindent 4 }}
+  verbs:
+    {{- toYaml .Values.role.deployment.verbs | nindent 4 }}

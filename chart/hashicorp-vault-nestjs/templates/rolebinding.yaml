@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+    name: {{ .Values.deployment.name }}-pod
+  name: {{ .Values.deployment.name }}-pod
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Values.role.namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Values.deployment.name }}-pod
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+    name: {{ .Values.deployment.name }}-deployment
+  name: {{ .Values.deployment.name }}-deployment
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Values.role.namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Values.deployment.name }}-deployment
+  apiGroup: rbac.authorization.k8s.io
+  

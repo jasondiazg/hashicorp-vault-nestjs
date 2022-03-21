@@ -1,0 +1,13 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    layer: backend
+    framework: nestjs
+    app: {{ .Values.deployment.name }}
+  name: {{ .Values.deployment.name }}
+spec:
+  minAvailable: {{ .Values.deployment.minAvailable }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.name }}
